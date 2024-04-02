@@ -1,0 +1,67 @@
+// Лабораторна робота 3
+// hardware transactional memory
+// UpdateThread2.java
+
+package lab3.thread.update;
+
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.concurrent.CountDownLatch;
+
+import lab3.connection.SQLConnectionManager;
+
+public class UpdateThread2 implements Runnable {
+
+	private String url;
+	private int loops;
+	private SQLConnectionManager sqlConnectionManager;
+	private CountDownLatch countDownLatch;
+
+	public UpdateThread2(String url, SQLConnectionManager sqlConnectionManager, int loops,
+			CountDownLatch countDownLatch) {
+		this.url = url;
+		this.loops = loops;
+		this.sqlConnectionManager = sqlConnectionManager;
+		this.countDownLatch = countDownLatch;
+	}
+
+	@Override
+	public void run() {
+		Connection connection;
+		Statement updateStatement;
+		try {
+			connection = sqlConnectionManager.createConnection(url);
+			updateStatement = sqlConnectionManager.createStatement(connection);
+		} catch (SQLException e) {
+			System.out.println("Помилка при встановленні з\'єднання з базою даних у потоці UPDATE 2...");
+			System.out.println(e);
+			return;
+		} finally {
+			countDownLatch.countDown();
+		}
+		String sql = "UPDATE Orders SET priority=priority+2 WHERE id=0";
+		try {
+			for (int i = 0; i < loops; i++) {
+				updateStatement.executeUpdate(sql);
+			}
+		} catch (SQLException e) {
+			System.out.println("Помилка у роботі потоку UPDATE 2...");
+			System.out.println(e);
+			return;
+		} finally {
+			countDownLatch.countDown();
+			closeConnections(connection, updateStatement);
+		}
+	}
+	
+	private void closeConnections(Connection connection, Statement statement) {
+		try {
+			sqlConnectionManager.closeConection(connection);
+			sqlConnectionManager.closeStatement(statement);
+		} catch (SQLException e) {
+			System.out.println("Помилка при закритті з\'єднання з базою даних у потоці UPDATE 1...");
+			System.out.println(e);
+		}
+	}
+}
