@@ -65,7 +65,7 @@ public class UpdateThread2 implements Runnable {
 			sqlConnectionManager.closeConection(connection);
 			sqlConnectionManager.closeStatement(statement);
 		} catch (SQLException e) {
-			System.out.println("Помилка при закритті з\'єднання з базою даних у потоці UPDATE 1...");
+			System.out.println("Помилка при закритті з\'єднання з базою даних у потоці UPDATE 2...");
 			System.out.println(e);
 		}
 	}
